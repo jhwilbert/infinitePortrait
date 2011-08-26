@@ -39,6 +39,7 @@ public:
 #endif
 	
 	ofxCvColorImage			colorImg;
+	ofxCvColorImage			copyImg;
 	
 	ofxCvGrayscaleImage 	grayImage;
 	ofxCvGrayscaleImage 	grayBg;
@@ -50,14 +51,16 @@ public:
 	
 	vector<int>				bufferFace;
 	
+	string					countdown;
 	int						bufferSize;
 	int						bufferTotal;
 	int						threshold;
 	bool					bLearnBakground;
 	bool					foundFace;
 	bool					isTracked;
+	bool					takePicture;
 	
-	ofTrueTypeFont verdana;
+	ofTrueTypeFont			verdana;
 	
 };
 

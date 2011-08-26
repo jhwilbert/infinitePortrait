@@ -10,20 +10,19 @@ void testApp::setup(){
 	
 	foundFace = false;
 	isTracked = false;
-	// timer
+
 	this->counter = new TimedCounter(5);
-	//this->counter->startCount();	
+
 	
-	
-	#ifdef _USE_LIVE_VIDEO
-		vidGrabber.setVerbose(true);
-		vidGrabber.initGrabber(320,240);
-	#else
-		vidPlayer.loadMovie("fingers.mp4");
-		vidPlayer.play();
-	#endif
+
+	vidGrabber.setVerbose(true);
+	vidGrabber.initGrabber(320,240);
+
 	
     colorImg.allocate(320,240);
+	copyImg.allocate(320, 240);
+	
+	
 	grayImage.allocate(320,240);
 	grayBg.allocate(320,240);
 	grayDiff.allocate(320,240);
@@ -39,88 +38,78 @@ void testApp::setup(){
 
 //--------------------------------------------------------------
 void testApp::update(){
-	
-	
-
-	
-//	if(this->counter->isCounting()){
-//		this->counter->update();
-//		if(this->counter->hasChanged())
-//			cout << "counter changed:" << this->counter->getCurrentCount() << endl;
-//		if(this->counter->isCountComplete())
-//			cout << "counter complete!" << endl;
-//		
-//	}
-	
-	// checks if face is detected for some time
-	
+		
+	// checks if face is detected for some time	
 	if(haarFinder.facesFound() == 1) {
 		if(bufferFace.size() < bufferSize) {
-			bufferFace.push_back(1); // adds to array to check persistance
-			
+			bufferFace.push_back(1); // adds to array to check persistance			
 		} else {
 			bufferFace.clear();
-		}
-		
+		}		
 	} else {
 		if(bufferFace.size() < bufferSize) {
 			bufferFace.push_back(0);
 		} else {
 			bufferFace.clear();
 		}		
-	}
-	
-	//bufferTotal = 0;
-	
-	// sum numbers
+	}	
+
+	// Check if all elements in array are 1 to find face
 	for (int i=0; i < bufferFace.size(); i++) {
 		if(bufferFace[i] == 1) {
-			//cout << "all one";
-			foundFace = true;
+			foundFace = true;			
 		} else {
 			foundFace = false;
+			takePicture = false;
 		}
 	}
 	
+	// Starts counter if it finds
+	
 	if(foundFace == true && isTracked == false) {
 		isTracked = true;
-		cout << "found";
+		this->counter->startCount();
+		cout << "Found Face";
 	} else if(foundFace == false && isTracked == true) {
-		cout << "lost it";
+		cout << "Lost";
 		isTracked = false;
 	} else {
 		// don't do anything
 	}
 	
+	// Countdown to picture
+	if(this->counter->isCounting()){
+		this->counter->update();
+		if(this->counter->hasChanged())
+			countdown = ofToString(this->counter->getCurrentCount());
+		if(this->counter->isCountComplete())
+			countdown = "Click";
+			takePicture = true;
+	}
 	
-	ofBackground(100,100,100);
+	
+	ofBackground(200,200,200);
     
     bool bNewFrame = false;
 	
-	#ifdef _USE_LIVE_VIDEO
-		vidGrabber.grabFrame();
-		bNewFrame = vidGrabber.isFrameNew();
-	#else
-		vidPlayer.idleMovie();
-		bNewFrame = vidPlayer.isFrameNew();
-	#endif
+
+	vidGrabber.grabFrame();
+	bNewFrame = vidGrabber.isFrameNew();
+
 	
 	if (bNewFrame){
-		
-		#ifdef _USE_LIVE_VIDEO
-			colorImg.setFromPixels(vidGrabber.getPixels(), 320,240);
-		#else
-			colorImg.setFromPixels(vidPlayer.getPixels(), 320,240);
-		#endif
-		
-        grayImage = colorImg;
+		colorImg.setFromPixels(vidGrabber.getPixels(), 320,240);
+		grayImage = colorImg;
 		
 		if (bLearnBakground == true){
 			grayBg = grayImage;		// the = sign copys the pixels from grayImage into grayBg (operator overloading)
 			bLearnBakground = false;
 		}
 		
-
+		if(takePicture == true) {
+			copyImg = colorImg;
+			takePicture = false;
+		}
 		
 		haarFinder.findHaarObjects(grayImage, 10, 99999999, 10);
 		
@@ -140,15 +129,16 @@ void testApp::draw(){
 	
 
 	ofSetColor(0x00FF00);
-	verdana.drawString("hello, this is franklin book calling\nanyone home?", 100,100);
+	verdana.drawString(countdown, 40,400);
 	
-	// draw the incoming, the grayscale, the bg and the thresholded difference
 	ofSetColor(0xffffff);
 	colorImg.draw(20,20);	
-	grayImage.draw(360,20);
-	grayBg.draw(20,280);
-	grayDiff.draw(360,280);
 	
+	copyImg.draw(360,20);
+	
+	//grayImage.draw(360,20);
+	//grayBg.draw(20,280);
+	//grayDiff.draw(360,280);
 	//haarFinder.draw(20, 20);	
 	
 	int numFace = haarFinder.blobs.size();
@@ -179,22 +169,20 @@ void testApp::draw(){
 	
 	// then draw the contours:
 	
-	ofFill();
-	ofSetColor(0x333333);
-	ofRect(360,540,320,240);
-	ofSetColor(0xffffff);
-    //contourFinder.draw(360,540);
-    
-    for (int i = 0; i < contourFinder.nBlobs; i++){
-        contourFinder.blobs[i].draw(360,540);
-    }
+//	ofFill();
+//	ofSetColor(0x333333);
+//	ofRect(360,540,320,240);
+//	ofSetColor(0xffffff);
+//    //contourFinder.draw(360,540);
+//    
+//    for (int i = 0; i < contourFinder.nBlobs; i++){
+//        contourFinder.blobs[i].draw(360,540);
+//    }
 	
-	// finally, a report:
-	
-	ofSetColor(0xffffff);
-	char reportStr[1024];
-	sprintf(reportStr, "bg subtraction and blob detection\npress ' ' to capture bg\nthreshold %i (press: +/-)\nnum blobs found %i", threshold, contourFinder.nBlobs);
-	ofDrawBitmapString(reportStr, 20, 600);
+	//ofSetColor(0xffffff);
+	//char reportStr[1024];
+	//sprintf(reportStr, "bg subtraction and blob detection\npress ' ' to capture bg\nthreshold %i (press: +/-)\nnum blobs found %i", threshold, contourFinder.nBlobs);
+	//ofDrawBitmapString(reportStr, 20, 600);
 	
 }
 
