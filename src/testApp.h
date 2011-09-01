@@ -46,7 +46,10 @@ public:
 	ofxCvGrayscaleImage 	grayDiff;
 	
 	ofxCvContourFinder		contourFinder;
+	
 	ofxCvHaarFinder			haarFinder;
+	ofxCvHaarFinder			eyeFinder;
+	
 	TimedCounter*			counter;
 	
 	vector<int>				bufferFace;
@@ -59,6 +62,7 @@ public:
 	bool					foundFace;
 	bool					isTracked;
 	bool					takePicture;
+	bool					pictureTaken;
 	
 	ofTrueTypeFont			verdana;
 	

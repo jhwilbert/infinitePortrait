@@ -4,41 +4,38 @@
 //--------------------------------------------------------------
 void testApp::setup(){
 	
-	bufferSize = 10; // define what is the buffer size to detect face
+	// define what is the buffer size to detect face
+	bufferSize = 50; 
 	
 	verdana.loadFont("verdana.ttf",32);
 	
 	foundFace = false;
 	isTracked = false;
-
-	this->counter = new TimedCounter(5);
-
 	
-
 	vidGrabber.setVerbose(true);
 	vidGrabber.initGrabber(320,240);
 
 	
     colorImg.allocate(320,240);
 	copyImg.allocate(320, 240);
-	
-	
 	grayImage.allocate(320,240);
-	grayBg.allocate(320,240);
-	grayDiff.allocate(320,240);
-	bLearnBakground = true;
-	threshold = 80;
-	
 
 	
-	//lets load in our face xml file
-	haarFinder.setup("haarXML/haarcascade_frontalface_default.xml");
+	// Haar XML objects
+	haarFinder.setup("haarXML/haarcascade_frontalface_default.xml");	
+	eyeFinder.setup("haarXML/haarcascade_eye.xml");
 	
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
 		
+	ofBackground(200,200,200);
+    
+    bool bNewFrame = false;
+	takePicture = false;
+
+	
 	// checks if face is detected for some time	
 	if(haarFinder.facesFound() == 1) {
 		if(bufferFace.size() < bufferSize) {
@@ -53,7 +50,7 @@ void testApp::update(){
 			bufferFace.clear();
 		}		
 	}	
-
+	
 	// Check if all elements in array are 1 to find face
 	for (int i=0; i < bufferFace.size(); i++) {
 		if(bufferFace[i] == 1) {
@@ -68,36 +65,24 @@ void testApp::update(){
 	
 	if(foundFace == true && isTracked == false) {
 		isTracked = true;
-		this->counter->startCount();
-		cout << "Found Face";
+		//this->counter->startCount();
+		countdown = "Found Face";
+		copyImg = colorImg;
 	} else if(foundFace == false && isTracked == true) {
 		cout << "Lost";
 		isTracked = false;
+		countdown = "Searching...";
 	} else {
-		// don't do anything
+		
 	}
 	
-	// Countdown to picture
-	if(this->counter->isCounting()){
-		this->counter->update();
-		if(this->counter->hasChanged())
-			countdown = ofToString(this->counter->getCurrentCount());
-		if(this->counter->isCountComplete())
-			countdown = "Click";
-			takePicture = true;
-	}
-	
-	
-	ofBackground(200,200,200);
-    
-    bool bNewFrame = false;
-	
+	// Video Control
 
 	vidGrabber.grabFrame();
 	bNewFrame = vidGrabber.isFrameNew();
-
-	
+		
 	if (bNewFrame){
+		
 		colorImg.setFromPixels(vidGrabber.getPixels(), 320,240);
 		grayImage = colorImg;
 		
@@ -107,43 +92,42 @@ void testApp::update(){
 		}
 		
 		if(takePicture == true) {
+			countdown = "Picture Taken";
 			copyImg = colorImg;
 			takePicture = false;
+			pictureTaken = true;
 		}
 		
+		
+		// finding face
 		haarFinder.findHaarObjects(grayImage, 10, 99999999, 10);
 		
+		// finding eyes
+		eyeFinder.findHaarObjects(grayImage,10, 99999999, 10);
 
-		// take the abs value of the difference between background and incoming and then threshold:
-		grayDiff.absDiff(grayBg, grayImage);
-		grayDiff.threshold(threshold);
-		
-		// find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
-		// also, find holes is set to true so we will get interior contours as well....
-		contourFinder.findContours(grayDiff, 20, (340*240)/3, 10, true);	// find holes
 	}
 }
 
 //--------------------------------------------------------------
 void testApp::draw(){
 	
-
+	// onscreen print
 	ofSetColor(0x00FF00);
 	verdana.drawString(countdown, 40,400);
 	
+	// drawing video canvas
 	ofSetColor(0xffffff);
 	colorImg.draw(20,20);	
-	
 	copyImg.draw(360,20);
-	
-	//grayImage.draw(360,20);
-	//grayBg.draw(20,280);
-	//grayDiff.draw(360,280);
-	//haarFinder.draw(20, 20);	
+	grayImage.draw(20 ,420);
+
+	// draw Haar object findings
+	haarFinder.draw(20, 20);	
 	
 	int numFace = haarFinder.blobs.size();
 	
 	
+	// finding face
 	glPushMatrix();
 	
 	glTranslatef(20, 20, 0);
@@ -166,24 +150,27 @@ void testApp::draw(){
 	}
 	
 	glPopMatrix();
+
 	
-	// then draw the contours:
+	// finding eyes
+	glPushMatrix();
 	
-//	ofFill();
-//	ofSetColor(0x333333);
-//	ofRect(360,540,320,240);
-//	ofSetColor(0xffffff);
-//    //contourFinder.draw(360,540);
-//    
-//    for (int i = 0; i < contourFinder.nBlobs; i++){
-//        contourFinder.blobs[i].draw(360,540);
-//    }
+	glTranslatef(20, 20, 0);
 	
-	//ofSetColor(0xffffff);
-	//char reportStr[1024];
-	//sprintf(reportStr, "bg subtraction and blob detection\npress ' ' to capture bg\nthreshold %i (press: +/-)\nnum blobs found %i", threshold, contourFinder.nBlobs);
-	//ofDrawBitmapString(reportStr, 20, 600);
-	
+	for(int i = 0; i < eyeFinder.blobs.size(); i++) {  
+		
+		ofxCvBlob cur = eyeFinder.blobs[i];  
+		
+		float ex = cur.boundingRect.x;
+		float ey = cur.boundingRect.y;
+		
+		ofSetColor(0xFF0000);
+		ofCircle(ex, ey, 10);		
+
+	}  
+
+	glPopMatrix();
+
 }
 
 
