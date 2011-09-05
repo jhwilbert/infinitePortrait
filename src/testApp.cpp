@@ -4,39 +4,44 @@
 //--------------------------------------------------------------
 void testApp::setup(){
 	
-	// define what is the buffer size to detect face
+	// Variables
 	bufferSize = 50; 
 	faceCounter = 0;
 	
-	verdana.loadFont("verdana.ttf",32);
-	
+
 	foundFace = false;
 	isTracked = false;
 	
+	// Screen Fonts
+	verdana.loadFont("verdana.ttf",32);
+
+	// Video Player
 	vidGrabber.setVerbose(true);
 	vidGrabber.initGrabber(320,240);
 	
+	// Allocations
     colorImg.allocate(320,240);
 	grayImage.allocate(320,240);
+	staticImage.allocate(320,240);
 	
 	copyImgs = new ofTexture[100];
-
 	
 	// Haar XML objects
-	haarFinder.setup("haarXML/haarcascade_frontalface_default.xml");	
-	eyeFinder.setup("haarXML/haarcascade_eye.xml");
+	haarFinder.setup("haarXML/haarcascade_frontalface_default.xml");
+	staticFinder.setup("haarXML/haarcascade_frontalface_default.xml");	
+
 	
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
-		
+	
+	cout << processFace;
+	
 	ofBackground(200,200,200);
     
     bool bNewFrame = false;
 	takePicture = false;
-
-
 	
 	// Finding Face /////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -67,15 +72,20 @@ void testApp::update(){
 	// Face Found ///////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	if(foundFace == true && isTracked == false) {
+			
+		processFace = true;
 		isTracked = true;		
 		countdown = "Found Face";
 		faceCounter++;
-		// Drawing Stack of ofTextures
+		
+		/* Drawing Stack of ofTextures */
 		copyImgs[faceCounter].allocate(320, 240,GL_RGB);		
 		newPixels = vidGrabber.getPixels();
 		copyImgs[faceCounter].loadData(newPixels,320,240,GL_RGB);	
 		
-		
+		staticImage = colorImg;
+		staticFinder.findHaarObjects(grayImage, 10, 99999999, 10);
+
 
 	} else if(foundFace == false && isTracked == true) {
 		isTracked = false;
@@ -89,60 +99,41 @@ void testApp::update(){
 	vidGrabber.grabFrame();
 	bNewFrame = vidGrabber.isFrameNew();
 		
-	if (bNewFrame){
-		
+	if (bNewFrame){		
 		colorImg.setFromPixels(vidGrabber.getPixels(), 320,240);
 		grayImage = colorImg;
-		
-		// finding face
-		haarFinder.findHaarObjects(grayImage, 10, 99999999, 10);
-		
-		// finding eyes
-		eyeFinder.findHaarObjects(grayImage,0, 0, 0);		
-		
+		haarFinder.findHaarObjects(grayImage, 10, 99999999, 10);		
 	}	
 }
 
 //--------------------------------------------------------------
 void testApp::draw(){
 	
-	// onscreen print
-	ofSetColor(0x00FF00);
-	verdana.drawString(countdown, 40,700);
-	
-	// drawing video canvas
+	/* Drawing Video Print */
 	ofSetColor(0xffffff);
 	colorImg.draw(20,20);	
-
+	staticImage.draw(340 ,20);
 	//grayImage.draw(20 ,420);
 	
-	ofEnableAlphaBlending();  
-	
-	for(int i=0; i < faceCounter; i++) {
-		ofSetColor(255,255,255,127);   // RGBA  
-		copyImgs[i].draw(50,260);
-	}
-	ofDisableAlphaBlending();  
-	
-
 	// Drawing Blobs /////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	haarFinder.draw(20, 20);	
-
+	
 	int numFace = haarFinder.blobs.size();
-	int numEyes = eyeFinder.blobs.size();
+//	int numEyes = eyeFinder.blobs.size();
 
 	glPushMatrix();	
 	
 	glTranslatef(20, 20, 0);
 	
+	// draws on moving image
 	for(int i = 0; i < numFace; i++){
-		float x = haarFinder.blobs[i].boundingRect.x;
-		float y = haarFinder.blobs[i].boundingRect.y;
-		float w = haarFinder.blobs[i].boundingRect.width;
-		float h = haarFinder.blobs[i].boundingRect.height;		
-		float cx = haarFinder.blobs[i].centroid.x;
-		float cy = haarFinder.blobs[i].centroid.y;
+		x = haarFinder.blobs[i].boundingRect.x;
+		y = haarFinder.blobs[i].boundingRect.y;
+		w = haarFinder.blobs[i].boundingRect.width;
+		h = haarFinder.blobs[i].boundingRect.height;		
+		cx = haarFinder.blobs[i].centroid.x;
+		cy = haarFinder.blobs[i].centroid.y;
 		
 		ofSetColor(0xFFFFFF);
 		ofRect(x, y, w, h);
@@ -150,25 +141,57 @@ void testApp::draw(){
 		ofSetColor(0xFFFFFF);
 		ofDrawBitmapString("face "+ofToString(i), cx, cy);		
 	}	
-	
-	for(int i = 0; i < numEyes; i++) {  			
-		float ex = eyeFinder.blobs[i].boundingRect.x;
-		float ey = eyeFinder.blobs[i].boundingRect.y;
-		float ew = eyeFinder.blobs[i].boundingRect.width;
-		float eh = eyeFinder.blobs[i].boundingRect.height;		
-		float ecx = eyeFinder.blobs[i].centroid.x;
-		float ecy = eyeFinder.blobs[i].centroid.y;
-
-		if(numEyes == 2) {
-			ofSetColor(0xFF0000);
-			ofRect(ex, ey, ew, eh);	
-			ofLine(eyeFinder.blobs[0].centroid.x,eyeFinder.blobs[0].centroid.y,eyeFinder.blobs[1].centroid.x,eyeFinder.blobs[1].centroid.y);			
-		}
-	}  
 
 	glPopMatrix();
+	
+	
+	if(processFace == true) {
+		glPushMatrix();	
+		
+		glTranslatef(340, 20, 0);
+		
+		// draws on static image
+		for(int i = 0; i < numFace; i++){
+			sx = staticFinder.blobs[i].boundingRect.x;
+			sy = staticFinder.blobs[i].boundingRect.y;
+			sw = staticFinder.blobs[i].boundingRect.width;
+			sh = staticFinder.blobs[i].boundingRect.height;		
+			scx = staticFinder.blobs[i].centroid.x;
+			scy = staticFinder.blobs[i].centroid.y;
+			
+			ofSetColor(0xFFFFFF);
+			ofRect(sx, sy, sw, sh);
+				
+		}
+		
+		glPushMatrix();	
+		//processFace = false;
+	}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+
+
+
+	// Drawing Images /////////////////////////////////////////////////////////////////////////////////////////////////
+
+	ofEnableAlphaBlending();  
+	
+	for(int i=0; i < faceCounter; i++) {
+		ofSetColor(255,255,255,127);   // RGBA  
+		copyImgs[faceCounter].draw(sx,260);
+	}
+	
+	ofDisableAlphaBlending();  
+	
+	
+	// Drawing Prints /////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	// onscreen print
+	ofSetColor(0x00FF00);
+	verdana.drawString(countdown, 40,700);
+	
+
+		
 }
 
 

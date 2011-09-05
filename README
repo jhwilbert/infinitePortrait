@@ -7,3 +7,26 @@ http://forum.openframeworks.cc/index.php/topic,2006.15.html
 http://www.cmucam.org/wiki/viola-jones
 
 http://nashruddin.com/OpenCV_Eye_Detection
+
+// eye tracking
+	//eyeFinder.setup("haarXML/haarcascade_eye.xml");
+			// finding eyes
+	//		eyeFinder.findHaarObjects(grayImage,0, 0, 0);		
+
+
+//	for(int i = 0; i < numEyes; i++) {  			
+//		ex = eyeFinder.blobs[i].boundingRect.x;
+//		ey = eyeFinder.blobs[i].boundingRect.y;
+//		ew = eyeFinder.blobs[i].boundingRect.width;
+//		eh = eyeFinder.blobs[i].boundingRect.height;		
+//		ecx = eyeFinder.blobs[i].centroid.x;
+//		ecy = eyeFinder.blobs[i].centroid.y;
+//
+//		if(numEyes == 2) {
+//			ofSetColor(0xFF0000);
+//			ofRect(ex, ey, ew, eh);	
+//			ofLine(eyeFinder.blobs[0].centroid.x,eyeFinder.blobs[0].centroid.y,eyeFinder.blobs[1].centroid.x,eyeFinder.blobs[1].centroid.y);			
+//		}
+//	}  
+	
+

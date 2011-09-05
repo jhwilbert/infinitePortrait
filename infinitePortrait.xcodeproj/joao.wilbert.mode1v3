@@ -325,7 +325,7 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>045BED15141527B100809CED</string>
+										<string>045BEDE814153B1200809CED</string>
 										<key>history</key>
 										<array>
 											<string>04ED702B14028E2B00F1E482</string>
@@ -336,8 +336,8 @@
 											<string>04A331C51414EF310053980D</string>
 											<string>04A332AF1414FB340053980D</string>
 											<string>04A332D6141502EB0053980D</string>
-											<string>04A332F5141509890053980D</string>
-											<string>04A33320141519910053980D</string>
+											<string>045BED7E141534BE00809CED</string>
+											<string>045BED7F141534BE00809CED</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -537,9 +537,9 @@
 	<array>
 		<string>045BECFC1415240F00809CED</string>
 		<string>045BECFD1415240F00809CED</string>
-		<string>1C78EAAD065D492600B07095</string>
 		<string>1CD10A99069EF8BA00B06720</string>
 		<string>043A00BD12B2878C0016877F</string>
+		<string>1C78EAAD065D492600B07095</string>
 		<string>/Users/joao.wilbert/openFrameworks/apps/projects/infinitePortrait/infinitePortrait.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
@@ -875,6 +875,8 @@
 					<key>Dock</key>
 					<array>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
@@ -887,7 +889,7 @@
 								<key>Frame</key>
 								<string>{{0, 0}, {1295, 777}}</string>
 								<key>RubberWindowFrame</key>
-								<string>1108 600 1295 818 0 0 2560 1418 </string>
+								<string>2627 622 1295 818 2560 540 1440 900 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXDebugCLIModule</string>
@@ -916,11 +918,11 @@
 			<key>ToolbarConfiguration</key>
 			<string>xcode.toolbar.config.consoleV3</string>
 			<key>WindowString</key>
-			<string>1108 600 1295 818 0 0 2560 1418 </string>
+			<string>2627 622 1295 818 2560 540 1440 900 </string>
 			<key>WindowToolGUID</key>
 			<string>1C78EAAD065D492600B07095</string>
 			<key>WindowToolIsVisible</key>
-			<false/>
+			<true/>
 		</dict>
 		<dict>
 			<key>Identifier</key>

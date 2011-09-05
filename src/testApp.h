@@ -30,11 +30,16 @@ public:
 	
 	ofxCvColorImage			colorImg;
 	ofxCvGrayscaleImage 	grayImage;
-	ofxCvGrayscaleImage 	grayBg;
-	ofxCvGrayscaleImage 	grayDiff;	
-	ofxCvContourFinder		contourFinder;
+	ofxCvGrayscaleImage 	staticImage;
+
+	
+	// Finds in moving image
 	ofxCvHaarFinder			haarFinder;
-	ofxCvHaarFinder			eyeFinder;
+	ofxCvHaarFinder			staticFinder;
+	
+	//ofxCvHaarFinder		eyeFinder;
+	
+	// Finds in static image
 	
 	TimedCounter*			counter;
 	
@@ -52,6 +57,11 @@ public:
 	bool					isTracked;
 	bool					takePicture;
 	bool					pictureTaken;
+	bool					processFace;
+	// tracking points
+	float					sx,sy,sw,sh,scx,scy;
+	float					ex,ey,ew,eh,ecx,ecy;
+	float					x,y,w,h,cx,cy;
 	
 	unsigned char *			newPixels;
 		
