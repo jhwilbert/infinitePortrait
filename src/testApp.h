@@ -39,7 +39,9 @@ public:
 #endif
 	
 	ofxCvColorImage			colorImg;
-	ofxCvColorImage			copyImg;
+	
+	ofTexture*				copyImgs;
+
 	
 	ofxCvGrayscaleImage 	grayImage;
 	ofxCvGrayscaleImage 	grayBg;
@@ -56,6 +58,8 @@ public:
 	
 	string					countdown;
 	int						bufferSize;
+	int						r,g,b;
+	int						totalPixels;
 	int						bufferTotal;
 	int						threshold;
 	bool					bLearnBakground;
@@ -64,6 +68,8 @@ public:
 	bool					takePicture;
 	bool					pictureTaken;
 	
+	unsigned char *			newPixels;
+		
 	ofTrueTypeFont			verdana;
 	
 };

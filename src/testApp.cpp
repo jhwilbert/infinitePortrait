@@ -14,11 +14,11 @@ void testApp::setup(){
 	
 	vidGrabber.setVerbose(true);
 	vidGrabber.initGrabber(320,240);
-
 	
     colorImg.allocate(320,240);
-	copyImg.allocate(320, 240);
 	grayImage.allocate(320,240);
+	
+	copyImgs = new ofTexture[100];
 
 	
 	// Haar XML objects
@@ -35,11 +35,14 @@ void testApp::update(){
     bool bNewFrame = false;
 	takePicture = false;
 
+
 	
-	// checks if face is detected for some time	
+	// Finding Face /////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	// Adds to array to check persistance
 	if(haarFinder.facesFound() == 1) {
 		if(bufferFace.size() < bufferSize) {
-			bufferFace.push_back(1); // adds to array to check persistance			
+			bufferFace.push_back(1); 		
 		} else {
 			bufferFace.clear();
 		}		
@@ -49,8 +52,7 @@ void testApp::update(){
 		} else {
 			bufferFace.clear();
 		}		
-	}	
-	
+	}		
 	// Check if all elements in array are 1 to find face
 	for (int i=0; i < bufferFace.size(); i++) {
 		if(bufferFace[i] == 1) {
@@ -61,23 +63,26 @@ void testApp::update(){
 		}
 	}
 	
-	// Starts counter if it finds
+	// Face Found ///////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	if(foundFace == true && isTracked == false) {
-		isTracked = true;
-		//this->counter->startCount();
+		isTracked = true;		
 		countdown = "Found Face";
-		copyImg = colorImg;
+		
+		// Drawing Stack of ofTextures
+		copyImgs[0].allocate(320, 240,GL_RGB);		
+		newPixels = vidGrabber.getPixels();
+		copyImgs[0].loadData(newPixels,320,240,GL_RGB);		
+
 	} else if(foundFace == false && isTracked == true) {
-		cout << "Lost";
 		isTracked = false;
 		countdown = "Searching...";
 	} else {
 		
 	}
 	
-	// Video Control
-
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	vidGrabber.grabFrame();
 	bNewFrame = vidGrabber.isFrameNew();
 		
@@ -86,26 +91,13 @@ void testApp::update(){
 		colorImg.setFromPixels(vidGrabber.getPixels(), 320,240);
 		grayImage = colorImg;
 		
-		if (bLearnBakground == true){
-			grayBg = grayImage;		// the = sign copys the pixels from grayImage into grayBg (operator overloading)
-			bLearnBakground = false;
-		}
-		
-		if(takePicture == true) {
-			countdown = "Picture Taken";
-			copyImg = colorImg;
-			takePicture = false;
-			pictureTaken = true;
-		}
-		
-		
 		// finding face
 		haarFinder.findHaarObjects(grayImage, 10, 99999999, 10);
 		
 		// finding eyes
-		eyeFinder.findHaarObjects(grayImage,10, 99999999, 10);
-
-	}
+		eyeFinder.findHaarObjects(grayImage,0, 0, 0);		
+		
+	}	
 }
 
 //--------------------------------------------------------------
@@ -118,17 +110,18 @@ void testApp::draw(){
 	// drawing video canvas
 	ofSetColor(0xffffff);
 	colorImg.draw(20,20);	
-	copyImg.draw(360,20);
-	grayImage.draw(20 ,420);
 
-	// draw Haar object findings
+	//grayImage.draw(20 ,420);
+	copyImgs[0].draw(20,260);
+
+	// Drawing Blobs /////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	haarFinder.draw(20, 20);	
-	
+
 	int numFace = haarFinder.blobs.size();
-	
-	
-	// finding face
-	glPushMatrix();
+	int numEyes = eyeFinder.blobs.size();
+
+	glPushMatrix();	
 	
 	glTranslatef(20, 20, 0);
 	
@@ -136,63 +129,41 @@ void testApp::draw(){
 		float x = haarFinder.blobs[i].boundingRect.x;
 		float y = haarFinder.blobs[i].boundingRect.y;
 		float w = haarFinder.blobs[i].boundingRect.width;
-		float h = haarFinder.blobs[i].boundingRect.height;
-		
+		float h = haarFinder.blobs[i].boundingRect.height;		
 		float cx = haarFinder.blobs[i].centroid.x;
 		float cy = haarFinder.blobs[i].centroid.y;
 		
-		ofSetColor(0xFF0000);
+		ofSetColor(0xFFFFFF);
 		ofRect(x, y, w, h);
 		
 		ofSetColor(0xFFFFFF);
-		ofDrawBitmapString("face "+ofToString(i), cx, cy);
-		
-	}
+		ofDrawBitmapString("face "+ofToString(i), cx, cy);		
+	}	
 	
-	glPopMatrix();
+	for(int i = 0; i < numEyes; i++) {  			
+		float ex = eyeFinder.blobs[i].boundingRect.x;
+		float ey = eyeFinder.blobs[i].boundingRect.y;
+		float ew = eyeFinder.blobs[i].boundingRect.width;
+		float eh = eyeFinder.blobs[i].boundingRect.height;		
+		float ecx = eyeFinder.blobs[i].centroid.x;
+		float ecy = eyeFinder.blobs[i].centroid.y;
 
-	
-	// finding eyes
-	glPushMatrix();
-	
-	glTranslatef(20, 20, 0);
-	
-	for(int i = 0; i < eyeFinder.blobs.size(); i++) {  
-		
-		ofxCvBlob cur = eyeFinder.blobs[i];  
-		
-		float ex = cur.boundingRect.x;
-		float ey = cur.boundingRect.y;
-		
-		ofSetColor(0xFF0000);
-		ofCircle(ex, ey, 10);		
-
+		if(numEyes == 2) {
+			ofSetColor(0xFF0000);
+			ofRect(ex, ey, ew, eh);	
+			ofLine(eyeFinder.blobs[0].centroid.x,eyeFinder.blobs[0].centroid.y,eyeFinder.blobs[1].centroid.x,eyeFinder.blobs[1].centroid.y);			
+		}
 	}  
 
 	glPopMatrix();
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 
 //--------------------------------------------------------------
 void testApp::keyPressed  (int key){ 
 	
-	switch (key){
-		case ' ':
-			bLearnBakground = true;
-			break;
-		case '+':
-			threshold ++;
-			if (threshold > 255) threshold = 255;
-			break;
-		case '-':
-			threshold --;
-			if (threshold < 0) threshold = 0;
-			break;
-		case 's':
-			vidGrabber.videoSettings();
-			break;
-	}
 }
 
 //--------------------------------------------------------------
@@ -210,8 +181,4 @@ void testApp::mousePressed(int x, int y, int button){
 //--------------------------------------------------------------
 void testApp::mouseReleased(){
 	
-}
-
-void testApp::exit(){
-	delete this->counter;
 }
