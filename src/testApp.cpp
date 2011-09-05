@@ -6,6 +6,7 @@ void testApp::setup(){
 	
 	// define what is the buffer size to detect face
 	bufferSize = 50; 
+	faceCounter = 0;
 	
 	verdana.loadFont("verdana.ttf",32);
 	
@@ -68,11 +69,13 @@ void testApp::update(){
 	if(foundFace == true && isTracked == false) {
 		isTracked = true;		
 		countdown = "Found Face";
-		
+		faceCounter++;
 		// Drawing Stack of ofTextures
-		copyImgs[0].allocate(320, 240,GL_RGB);		
+		copyImgs[faceCounter].allocate(320, 240,GL_RGB);		
 		newPixels = vidGrabber.getPixels();
-		copyImgs[0].loadData(newPixels,320,240,GL_RGB);		
+		copyImgs[faceCounter].loadData(newPixels,320,240,GL_RGB);	
+		
+		
 
 	} else if(foundFace == false && isTracked == true) {
 		isTracked = false;
@@ -105,14 +108,22 @@ void testApp::draw(){
 	
 	// onscreen print
 	ofSetColor(0x00FF00);
-	verdana.drawString(countdown, 40,400);
+	verdana.drawString(countdown, 40,700);
 	
 	// drawing video canvas
 	ofSetColor(0xffffff);
 	colorImg.draw(20,20);	
 
 	//grayImage.draw(20 ,420);
-	copyImgs[0].draw(20,260);
+	
+	ofEnableAlphaBlending();  
+	
+	for(int i=0; i < faceCounter; i++) {
+		ofSetColor(255,255,255,127);   // RGBA  
+		copyImgs[i].draw(50,260);
+	}
+	ofDisableAlphaBlending();  
+	
 
 	// Drawing Blobs /////////////////////////////////////////////////////////////////////////////////////////////////
 	
